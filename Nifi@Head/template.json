@@ -1,0 +1,164 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "subscriptionID": {
+      "type": "string"
+    },
+    "resourceGroupName": {
+      "type": "string"
+    },
+    "vNetName": {
+      "type": "string"
+    },
+    "subnetName": {
+      "type": "string"
+    },
+    "clusterName": {
+      "type": "string"
+    },
+    "workerNodeNumber": {
+      "type": "string"
+    },
+    "workerNodeVMSize": {
+      "type": "string"
+    },
+    "headNodeNumber": {
+      "type": "string"
+    },
+    "headNodeVMSize": {
+      "type": "string"
+    },
+    "clusterType": {
+      "type": "string",
+      "defaultValue": "SPARK"
+    },
+    "clusterVersion": {
+      "type": "string",
+      "defaultValue": "3.6"
+    },
+    "clusterLoginUserName": {
+      "type": "string"
+    },
+    "clusterLoginPassword": {
+      "type": "securestring"
+    },
+    "sshUserName": {
+      "type": "string"
+    },
+    "sshPassword": {
+      "type": "securestring"
+    },
+    "linkedStorageAccountName1": {
+      "type": "string"
+    },
+    "linkedStorageAccountName2": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "eastasia"
+    },
+    "scriptActionUri": {
+      "type": "string",
+      "defaultValue": "https://raw.githubusercontent.com/msftkenneth/HDInsight-Spark-Nifi/master/Nifi@Head/nifi.sh"
+    }
+  },
+  "variables": {
+    "vNetID": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vNetName'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.HDInsight/clusters",
+      "name": "[parameters('clusterName')]",
+      "location": "[parameters('location')]",
+      "apiVersion": "2015-03-01-preview",
+      "dependsOn": [],
+      "properties": {
+        "clusterVersion": "[parameters('clusterVersion')]",
+        "osType": "Linux",
+        "tier": "Standard",
+        "clusterDefinition": {
+          "kind": "[parameters('clusterType')]",
+          "componentVersion": {
+            "Spark": "2.1"
+          },
+          "configurations": {
+            "gateway": {
+              "restAuthCredential.isEnabled": true,
+              "restAuthCredential.username": "[parameters('clusterLoginUserName')]",
+              "restAuthCredential.password": "[parameters('clusterLoginPassword')]"
+            }
+          }
+        },
+        "storageProfile": {
+          "storageaccounts": [
+            {
+              "name": "[concat(parameters('linkedStorageAccountName1'),'.blob.core.windows.net')]",
+              "isDefault": true,
+              "container": "[parameters('clusterName')]",
+              "key": "[listKeys(resourceId('Microsoft.Storage/storageAccounts',parameters('linkedStorageAccountName1')), '2015-05-01-preview').key1]"
+            },
+            {
+              "name": "[concat(parameters('linkedStorageAccountName2'),'.blob.core.windows.net')]",
+              "isDefault": false,
+              "container": "[parameters('clusterName')]",
+              "key": "[listKeys(resourceId('Microsoft.Storage/storageAccounts',parameters('linkedStorageAccountName2')), '2015-05-01-preview').key1]"
+            }
+          ]
+        },
+        "computeProfile": {
+          "roles": [
+            {
+              "name": "headnode",
+              "targetInstanceCount": "[parameters('headNodeNumber')]",
+              "hardwareProfile": {
+                "vmSize": "[parameters('headNodeVMSize')]"
+              },
+              "osProfile": {
+                "linuxOperatingSystemProfile": {
+                  "username": "[parameters('sshUserName')]",
+                  "password": "[parameters('sshPassword')]"
+                }
+              },
+              "virtualNetworkProfile": {
+                "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vNetName'))]",
+                "subnet": "[concat(resourceId('Microsoft.Network/virtualNetworks', parameters('vNetName')),'/subnets/',parameters('subnetName'))]"
+              },
+              "scriptActions": [
+                {
+                  "name": "nifiInstallation",
+                  "uri": "[parameters('scriptActionUri')]"
+                }
+              ]
+            },
+            {
+              "name": "workernode",
+              "targetInstanceCount": "[parameters('workerNodeNumber')]",
+              "hardwareProfile": {
+                "vmSize": "[parameters('workerNodeVMSize')]"
+              },
+              "osProfile": {
+                "linuxOperatingSystemProfile": {
+                  "username": "[parameters('sshUserName')]",
+                  "password": "[parameters('sshPassword')]"
+                }
+              },
+              "virtualNetworkProfile": {
+                "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vNetName'))]",
+                "subnet": "[concat(resourceId('Microsoft.Network/virtualNetworks', parameters('vNetName')),'/subnets/',parameters('subnetName'))]"
+              },
+              "scriptActions": []
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "cluster": {
+      "type": "object",
+      "value": "[reference(resourceId('Microsoft.HDInsight/clusters',parameters('clusterName')))]"
+    }
+  }
+}

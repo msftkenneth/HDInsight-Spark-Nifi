@@ -1,0 +1,71 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "subscriptionID": {
+        "value": "9027a87b-dc76-4b35-a9ad-2f883887c9f0"
+      },
+      "resourceGroupName": {
+        "value": "rg-test-hk-di-shared"
+      },
+      "vNetName": {
+        "value": "vn-test-hk-di-shared"
+      },
+      "subnetName": {
+        "value": "hdinsight"
+      },
+      "clusterName": {
+        "value": "hdi-prod-hk-di"
+      },
+      "workerNodeNumber": {
+        "value": "1"
+      },
+      "workerNodeVMSize": {
+        "value": "Standard_D13_V2"
+      },
+      "headNodeNumber": {
+        "value": "2"
+      },
+      "headNodeVMSize": {
+        "value": "Standard_D12_V2"
+      },
+      "clusterLoginUserName": {
+        "reference": {
+                "keyVault": {
+                    "id": "/subscriptions/9027a87b-dc76-4b35-a9ad-2f883887c9f0/resourceGroups/rg-test-hk-di-shared/providers/Microsoft.KeyVault/vaults/kv-test-hk-peak-di"
+                },
+                "secretName": "hdinsight-sshusername"
+            }
+      },
+      "clusterLoginPassword": {
+        "reference": {
+                "keyVault": {
+                  "id": "/subscriptions/9027a87b-dc76-4b35-a9ad-2f883887c9f0/resourceGroups/rg-test-hk-di-shared/providers/Microsoft.KeyVault/vaults/kv-test-hk-peak-di"
+                },
+                "secretName": "hdinsight-password"
+            }
+      },              
+      "sshUserName": {
+        "reference": {
+                "keyVault": {
+                  "id": "/subscriptions/9027a87b-dc76-4b35-a9ad-2f883887c9f0/resourceGroups/rg-test-hk-di-shared/providers/Microsoft.KeyVault/vaults/kv-test-hk-peak-di"
+                },
+                "secretName": "hdinsight-sshusername"
+            }
+      },
+      "sshPassword": {
+        "reference": {
+                "keyVault": {
+                  "id": "/subscriptions/9027a87b-dc76-4b35-a9ad-2f883887c9f0/resourceGroups/rg-test-hk-di-shared/providers/Microsoft.KeyVault/vaults/kv-test-hk-peak-di"
+                },
+                "secretName": "hdinsight-password"
+            }
+      },
+      "linkedStorageAccountName1": {
+        "value": "saccttesthkdihdi"
+      },
+      "linkedStorageAccountName2": {
+        "value": "saccttesthkdihdi2"
+      }
+    }
+}
