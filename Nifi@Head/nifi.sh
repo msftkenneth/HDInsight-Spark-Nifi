@@ -42,13 +42,39 @@ installNiFi() {
     sed -i "s/<property name=\"Connect String\"><\/property>/<property name=\"Connect String\">${ZOOKEEPER_HOSTS}<\/property>/g" state-management.xml
 }
 
-startNifi() {
-    cd /usr/hdp/current/nifi/bin
-    sudo ./nifi.sh start
+installNifiasService() {
+echo '
+[Unit]
+Description=Nifi Service
+After=network.target
+After=systemd-user-sessions.service
+After=network-online.target
+
+[Service]
+ExecStart=/usr/hdp/current/nifi/bin/nifi.sh start
+ExecStop=/usr/hdp/current/nifi/bin/nifi.sh stop
+ExecReload=/usr/hdp/current/nifi/bin/nifi.sh restart
+TimeoutSec=30
+Restart=on-failure
+RestartSec=30
+StartLimitInterval=350
+StartLimitBurst=10
+
+[Install]
+WantedBy=multi-user.target' > /etc/systemd/system/nifi.service
+
+sudo chmod 664 /etc/systemd/system/nifi.service
+}
+
+startNifiService() {
+    systemctl enable nifi
+    systemctl start nifi
     exit 0
 }
+
 
 checkNifi
 installJava
 installNiFi
-startNifi
+installNifiasService
+startNifiService
